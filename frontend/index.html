@@ -86,7 +86,7 @@
     </div>
 
     <script>
-        const socket = io("http://https://chat-real-kr4m.onrender.com");
+        const socket = io("https://chat-real-kr4m.onrender.com");
         let username = prompt("Enter your name:");
         while (!username) username = prompt("Enter your name:");
         socket.emit("set username", username);
