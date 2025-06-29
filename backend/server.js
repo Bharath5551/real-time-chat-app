@@ -78,7 +78,7 @@ io.on("connection", (socket) => {
             fs.writeFileSync(filePath, fileBuffer);
             console.log(`✅ File saved: ${filePath}`);
 
-            const fileUrl = `/uploads/${safeFileName}`;
+            const fileUrl = `https://chat-real-kr4m.onrender.com/uploads/${safeFileName}`;
             const filePayload = {
                 sender: users[socket.id],
                 fileName,
