@@ -19,7 +19,8 @@ const io = new Server(server, {
 });
 
 app.use(cors());
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use("/uploads", express.static(UPLOADS_DIR));
+
 
 // ✅ File Upload Settings
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
