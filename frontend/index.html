@@ -183,3 +183,190 @@
     </script>
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Chat</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            justify-content: center;
+        }
+        #chat-container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border-bottom: 2px solid white;
+            padding: 10px;
+            background: rgba(0,0,0,0.8);
+        }
+        #message {
+            width: 75%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        #sendBtn {
+            padding: 10px;
+            background: #ff9800;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .user-message { text-align: right; }
+        .other-message { text-align: left; }
+        .private-message { color: red; }
+        #users-box {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        #fileInput {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h2>Creative Chat</h2>
+        <div id="chat-box"></div>
+
+        <select id="recipient">
+            <option value="">Public Chat</option>
+        </select>
+
+        <input type="text" id="message" placeholder="Type a message...">
+        <button id="sendBtn" onclick="sendMessage()">Send</button>
+
+        <!-- File Sharing -->
+        <input type="file" id="fileInput">
+        <button onclick="sendFile()">Send File</button>
+
+        <div id="users-box">
+            <h3>Online Users</h3>
+            <ul id="users-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const socket = io("http://172.20.10.7:3000");
+        let username = prompt("Enter your name:");
+        while (!username) username = prompt("Enter your name:");
+        socket.emit("set username", username);
+
+        // Send message function
+        function sendMessage() {
+            const input = document.getElementById("message");
+            const message = input.value.trim();
+            const recipientId = document.getElementById("recipient").value; 
+
+            if (message) {
+                if (recipientId) {
+                    socket.emit("private message", { recipientId, message });
+                } else {
+                    socket.emit("chat message", { username, message });
+                }
+                input.value = "";
+            }
+        }
+
+        // Send message when Enter is pressed
+        document.getElementById("message").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        // Receive public messages
+        socket.on("chat message", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "message " + (data.username === username ? "user-message" : "other-message");
+            msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // Receive private messages
+        socket.on("private message", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = "message private-message";
+            msgDiv.innerHTML = `<strong>[Private] ${data.sender}:</strong> ${data.message}`;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        // Update user list
+        socket.on("user update", (users) => {
+            const usersList = document.getElementById("users-list");
+            const recipientSelect = document.getElementById("recipient");
+
+            usersList.innerHTML = "";
+            recipientSelect.innerHTML = `<option value="">Public Chat</option>`;
+
+            Object.entries(users).forEach(([id, user]) => {
+                if (id !== socket.id) {
+                    usersList.innerHTML += `<li>${user}</li>`;
+                    recipientSelect.innerHTML += `<option value="${id}">${user}</option>`;
+                }
+            });
+        });
+
+        // File sharing
+        function sendFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+            const recipientId = document.getElementById("recipient").value;
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileData = event.target.result;
+                    socket.emit("file upload", {
+                        recipientId: recipientId || null,
+                        fileName: file.name,
+                        fileData
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Receive file
+        socket.on("file upload", (data) => {
+            const chatBox = document.getElementById("chat-box");
+            const fileDiv = document.createElement("div");
+            fileDiv.className = "message";
+            fileDiv.innerHTML = `<strong>${data.sender}:</strong> <a href="${data.fileData}" download="${data.fileName}" style="color: yellow;">📁 ${data.fileName}</a>`;
+            chatBox.appendChild(fileDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+    </script>
+</body>
+</html>
+
