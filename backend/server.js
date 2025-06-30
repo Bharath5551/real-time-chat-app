@@ -8,32 +8,29 @@ const cors = require("cors");
 
 const app = express();
 const server = http.createServer(app);
-
-// ✅ Socket.IO with increased buffer size
 const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
     },
-    maxHttpBufferSize: 5e6 // ✅ Increased limit to 5MB
+    maxHttpBufferSize: 5e6 // 5MB file upload limit
 });
 
 app.use(cors());
-app.use("/uploads", express.static(UPLOADS_DIR));
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-
-// ✅ File Upload Settings
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-const ALLOWED_FILE_TYPES = ["jpg", "jpeg", "png", "pdf", "txt", "mp4"];
-const DELETE_OLD_FILES = true;
-const ENCRYPT_FILE_NAMES = true;
-
-// ✅ Ensure uploads directory exists
+// ✅ Declare and create uploads folder BEFORE using it
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) {
     fs.mkdirSync(UPLOADS_DIR);
 }
 app.use("/uploads", express.static(UPLOADS_DIR));
+
+// ✅ Upload config
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const ALLOWED_FILE_TYPES = ["jpg", "jpeg", "png", "pdf", "txt", "mp4"];
+const DELETE_OLD_FILES = true;
+const ENCRYPT_FILE_NAMES = true;
 
 const users = {};
 
@@ -42,7 +39,7 @@ io.on("connection", (socket) => {
 
     socket.on("set username", (username) => {
         users[socket.id] = username;
-        io.emit("user update", Object.values(users));
+        io.emit("user update", Object.fromEntries(Object.entries(users)));
     });
 
     socket.on("chat message", (data) => {
@@ -56,10 +53,7 @@ io.on("connection", (socket) => {
 
     socket.on("file upload", ({ recipientId, fileName, fileData }) => {
         try {
-            console.log(`📂 Receiving file: ${fileName} from ${users[socket.id]}`);
-
             const fileBuffer = Buffer.from(fileData, "base64");
-
             if (fileBuffer.length > MAX_FILE_SIZE) {
                 socket.emit("error message", "❌ File too large (Max: 20MB)");
                 return;
@@ -80,15 +74,10 @@ io.on("connection", (socket) => {
             console.log(`✅ File saved: ${filePath}`);
 
             const fileUrl = `https://chat-real-kr4m.onrender.com/uploads/${safeFileName}`;
-            const filePayload = {
-                sender: users[socket.id],
-                fileName,
-                fileUrl
-            };
-
+            const payload = { sender: users[socket.id], fileName, fileUrl };
             recipientId
-                ? socket.to(recipientId).emit("file upload", filePayload)
-                : io.emit("file upload", filePayload);
+                ? socket.to(recipientId).emit("file upload", payload)
+                : io.emit("file upload", payload);
 
             if (DELETE_OLD_FILES) {
                 setTimeout(() => {
@@ -100,7 +89,7 @@ io.on("connection", (socket) => {
                     } catch (err) {
                         console.error("❌ File deletion error:", err);
                     }
-                }, 10 * 60 * 1000); // 10 minutes
+                }, 10 * 60 * 1000); // Delete after 10 minutes
             }
         } catch (err) {
             console.error("❌ File upload error:", err);
@@ -110,19 +99,17 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         if (users[socket.id]) {
-            console.log(`❌ User disconnected: ${users[socket.id]} (${socket.id})`);
             socket.broadcast.emit("chat message", {
                 username: "System",
                 message: `${users[socket.id]} left the chat!`,
                 system: true
             });
             delete users[socket.id];
-            io.emit("user update", Object.values(users));
+            io.emit("user update", Object.fromEntries(Object.entries(users)));
         }
     });
 });
 
-// ✅ Start Server
 const PORT = 3000;
 const HOST = "0.0.0.0";
 server.listen(PORT, HOST, () => {
