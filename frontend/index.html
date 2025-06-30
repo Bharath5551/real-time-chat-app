@@ -103,11 +103,11 @@ function sendFile() {
   if (file) {
     const reader = new FileReader();
     reader.onload = function(event) {
-      const fileData = event.target.result.split(',')[1];
+      const base64String = event.target.result.split(',')[1];
       socket.emit("file upload", {
         recipientId: recipientId || null,
         fileName: file.name,
-        fileData
+        fileData: base64String
       });
     };
     reader.readAsDataURL(file);
@@ -119,7 +119,7 @@ socket.on("file upload", (data) => {
   const fileDiv = document.createElement("div");
   fileDiv.className = "message";
 
-  const isImage = /\.(jpg|jpeg|png)$/i.test(data.fileName);
+  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(data.fileName);
   fileDiv.innerHTML = `<strong>${data.sender}:</strong> ` +
     (isImage
       ? `<img src="${data.fileUrl}" alt="${data.fileName}">`
