@@ -17,6 +17,7 @@
     .private-message { color: red; }
     #users-box { background: rgba(0, 0, 0, 0.5); padding: 10px; margin-top: 10px; border-radius: 5px; }
     #fileInput { margin-top: 10px; }
+    img { max-width: 100%; border-radius: 5px; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -52,7 +53,7 @@ function sendMessage() {
     if (recipientId) {
       socket.emit("private message", { recipientId, message });
     } else {
-      socket.emit("chat message", { message }); // ✅ username handled on backend
+      socket.emit("chat message", { message });
     }
     input.value = "";
   }
@@ -117,7 +118,13 @@ socket.on("file upload", (data) => {
   const chatBox = document.getElementById("chat-box");
   const fileDiv = document.createElement("div");
   fileDiv.className = "message";
-  fileDiv.innerHTML = `<strong>${data.sender}:</strong> <a href="${data.fileUrl}" download="${data.fileName}" target="_blank" style="color: yellow;">📁 ${data.fileName}</a>`;
+
+  const isImage = /\.(jpg|jpeg|png)$/i.test(data.fileName);
+  fileDiv.innerHTML = `<strong>${data.sender}:</strong> ` +
+    (isImage
+      ? `<img src="${data.fileUrl}" alt="${data.fileName}">`
+      : `<a href="${data.fileUrl}" download="${data.fileName}" target="_blank" style="color: yellow;">📁 ${data.fileName}</a>`);
+
   chatBox.appendChild(fileDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
