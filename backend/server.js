@@ -56,7 +56,8 @@ io.on("connection", (socket) => {
       fs.writeFileSync(filePath, buf);
       console.log("✅ File saved:", filePath);
 
-      const url = `/uploads/${safeName}`;
+      const url = `https://chat-real-kr4m.onrender.com/uploads/${safeName}`;
+
       const payload = { sender: users[socket.id], fileName, fileUrl: url };
       recipientId
         ? socket.to(recipientId).emit("file upload", payload)
