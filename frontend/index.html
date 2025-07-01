@@ -21,6 +21,10 @@
   </style>
 </head>
 <body>
+  <div id="drop-zone" style="border: 2px dashed #fff; padding: 20px; margin-top: 10px; text-align: center;">
+  Drop files here to upload
+</div>
+
 <div id="chat-container">
   <h2>Creative Chat</h2>
   <div id="chat-box"></div>
@@ -38,6 +42,7 @@
 </div>
 
 <script>
+  
 const socket = io("https://chat-real-kr4m.onrender.com");
 
 let username = prompt("Enter your name:");
@@ -128,6 +133,36 @@ socket.on("file upload", (data) => {
   chatBox.appendChild(fileDiv);
   chatBox.scrollTop = chatBox.scrollHeight;
 });
+  const dropZone = document.getElementById("drop-zone");
+
+dropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  dropZone.style.borderColor = "yellow";
+});
+
+dropZone.addEventListener("dragleave", () => {
+  dropZone.style.borderColor = "white";
+});
+
+dropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dropZone.style.borderColor = "white";
+
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const fileData = event.target.result.split(',')[1];
+      socket.emit("file upload", {
+        recipientId: document.getElementById("recipient").value || null,
+        fileName: file.name,
+        fileData
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
 </script>
 </body>
 </html>
