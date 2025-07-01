@@ -18,7 +18,13 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-app.use("/uploads", express.static(UPLOADS_DIR));
+app.use("/uploads", express.static(UPLOADS_DIR, {
+  setHeaders: (res, filePath) => {
+    res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ Allow frontend from Vercel
+    res.setHeader("Content-Disposition", "inline");     // ✅ Ensures preview/download
+  }
+}));
+
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = ["jpg","jpeg","png","pdf","txt","mp4"];
