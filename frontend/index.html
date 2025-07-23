@@ -6,163 +6,232 @@
   <title>Creative Chat</title>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); color: white; display: flex; flex-direction: column; align-items: center; height: 100vh; justify-content: center; }
-    #chat-container { width: 90%; max-width: 500px; background: rgba(0, 0, 0, 0.7); padding: 20px; border-radius: 10px; }
-    #chat-box { height: 300px; overflow-y: auto; border-bottom: 2px solid white; padding: 10px; background: rgba(0,0,0,0.8); }
-    #message { width: 75%; padding: 10px; border: none; border-radius: 5px; }
-    #sendBtn { padding: 10px; background: #ff9800; border: none; color: white; cursor: pointer; border-radius: 5px; }
-    .message { padding: 5px; margin: 5px 0; border-radius: 5px; }
-    .user-message { text-align: right; }
-    .other-message { text-align: left; }
-    .private-message { color: red; }
-    #users-box { background: rgba(0, 0, 0, 0.5); padding: 10px; margin-top: 10px; border-radius: 5px; }
-    #fileInput { margin-top: 10px; }
-    img { max-width: 100%; border-radius: 5px; margin-top: 5px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      color: white; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      height: 100vh; 
+      justify-content: center; 
+    }
+    #chat-container { 
+      width: 90%; 
+      max-width: 500px; 
+      background: rgba(0, 0, 0, 0.7); 
+      padding: 20px; 
+      border-radius: 10px; 
+    }
+    #chat-box { 
+      height: 300px; 
+      overflow-y: auto; 
+      border-bottom: 2px solid white; 
+      padding: 10px; 
+      background: rgba(0,0,0,0.8); 
+    }
+    #message { 
+      width: 75%; 
+      padding: 10px; 
+      border: none; 
+      border-radius: 5px; 
+    }
+    #sendBtn { 
+      padding: 10px; 
+      background: #ff9800; 
+      border: none; 
+      color: white; 
+      cursor: pointer; 
+      border-radius: 5px; 
+    }
+    .message { 
+      padding: 5px; 
+      margin: 5px 0; 
+      border-radius: 5px; 
+    }
+    .user-message { 
+      text-align: right; 
+    }
+    .other-message { 
+      text-align: left; 
+    }
+    .private-message { 
+      color: red; 
+    }
+    #users-box { 
+      background: rgba(0, 0, 0, 0.5); 
+      padding: 10px; 
+      margin-top: 10px; 
+      border-radius: 5px; 
+    }
+    #fileInput { 
+      margin-top: 10px; 
+    }
+    img { 
+      max-width: 100%; 
+      border-radius: 5px; 
+      margin-top: 5px; 
+    }
+
+    /* New CSS to preserve indentation and line breaks */
+    .message-content {
+      white-space: pre-wrap; /* preserve spaces and line breaks */
+      word-wrap: break-word; /* wrap long lines */
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
   <div id="drop-zone" style="border: 2px dashed #fff; padding: 20px; margin-top: 10px; text-align: center;">
-  Drop files here to upload
-</div>
-
-<div id="chat-container">
-  <h2>Creative Chat</h2>
-  <div id="chat-box"></div>
-  <select id="recipient">
-    <option value="">Public Chat</option>
-  </select>
-  <input type="text" id="message" placeholder="Type a message...">
-  <button id="sendBtn" onclick="sendMessage()">Send</button>
-  <input type="file" id="fileInput">
-  <button onclick="sendFile()">Send File</button>
-  <div id="users-box">
-    <h3>Online Users</h3>
-    <ul id="users-list"></ul>
+    Drop files here to upload
   </div>
-</div>
 
-<script>
-  
-const socket = io("https://chat-real-kr4m.onrender.com");
+  <div id="chat-container">
+    <h2>Creative Chat</h2>
+    <div id="chat-box"></div>
+    <select id="recipient">
+      <option value="">Public Chat</option>
+    </select>
+    <input type="text" id="message" placeholder="Type a message...">
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
+    <input type="file" id="fileInput">
+    <button onclick="sendFile()">Send File</button>
+    <div id="users-box">
+      <h3>Online Users</h3>
+      <ul id="users-list"></ul>
+    </div>
+  </div>
 
-let username = prompt("Enter your name:");
-while (!username) username = prompt("Enter your name:");
-socket.emit("set username", username);
+  <script>
+    const socket = io("https://chat-real-kr4m.onrender.com");
 
-function sendMessage() {
-  const input = document.getElementById("message");
-  const message = input.value.trim();
-  const recipientId = document.getElementById("recipient").value;
+    let username = prompt("Enter your name:");
+    while (!username) username = prompt("Enter your name:");
+    socket.emit("set username", username);
 
-  if (message) {
-    if (recipientId) {
-      socket.emit("private message", { recipientId, message });
-    } else {
-      socket.emit("chat message", { message });
+    function sendMessage() {
+      const input = document.getElementById("message");
+      const message = input.value.trim();
+      const recipientId = document.getElementById("recipient").value;
+
+      if (message) {
+        if (recipientId) {
+          socket.emit("private message", { recipientId, message });
+        } else {
+          socket.emit("chat message", { message });
+        }
+        input.value = "";
+      }
     }
-    input.value = "";
-  }
-}
 
-document.getElementById("message").addEventListener("keydown", function(event) {
-  if (event.key === "Enter") sendMessage();
-});
+    document.getElementById("message").addEventListener("keydown", function(event) {
+      if (event.key === "Enter") sendMessage();
+    });
 
-socket.on("chat message", (data) => {
-  const chatBox = document.getElementById("chat-box");
-  const msgDiv = document.createElement("div");
-  msgDiv.className = "message " + (data.username === username ? "user-message" : "other-message");
-  msgDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
+    socket.on("chat message", (data) => {
+      const chatBox = document.getElementById("chat-box");
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "message " + (data.username === username ? "user-message" : "other-message");
 
-socket.on("private message", (data) => {
-  const chatBox = document.getElementById("chat-box");
-  const msgDiv = document.createElement("div");
-  msgDiv.className = "message private-message";
-  msgDiv.innerHTML = `<strong>[Private] ${data.sender}:</strong> ${data.message}`;
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
+      // Preserve line breaks and indentation
+      msgDiv.innerHTML = `<strong>${data.username}:</strong> <div class="message-content"></div>`;
+      msgDiv.querySelector(".message-content").textContent = data.message;
 
-socket.on("user update", (users) => {
-  const usersList = document.getElementById("users-list");
-  const recipientSelect = document.getElementById("recipient");
-  usersList.innerHTML = "";
-  recipientSelect.innerHTML = `<option value="">Public Chat</option>`;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-  Object.entries(users).forEach(([id, user]) => {
-    if (id !== socket.id) {
-      usersList.innerHTML += `<li>${user}</li>`;
-      recipientSelect.innerHTML += `<option value="${id}">${user}</option>`;
+    socket.on("private message", (data) => {
+      const chatBox = document.getElementById("chat-box");
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "message private-message";
+
+      // Preserve line breaks and indentation
+      msgDiv.innerHTML = `<strong>[Private] ${data.sender}:</strong> <div class="message-content"></div>`;
+      msgDiv.querySelector(".message-content").textContent = data.message;
+
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    socket.on("user update", (users) => {
+      const usersList = document.getElementById("users-list");
+      const recipientSelect = document.getElementById("recipient");
+      usersList.innerHTML = "";
+      recipientSelect.innerHTML = `<option value="">Public Chat</option>`;
+
+      Object.entries(users).forEach(([id, user]) => {
+        if (id !== socket.id) {
+          usersList.innerHTML += `<li>${user}</li>`;
+          recipientSelect.innerHTML += `<option value="${id}">${user}</option>`;
+        }
+      });
+    });
+
+    function sendFile() {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+      const recipientId = document.getElementById("recipient").value;
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const base64String = event.target.result.split(',')[1];
+          socket.emit("file upload", {
+            recipientId: recipientId || null,
+            fileName: file.name,
+            fileData: base64String
+          });
+        };
+        reader.readAsDataURL(file);
+      }
     }
-  });
-});
 
-function sendFile() {
-  const fileInput = document.getElementById("fileInput");
-  const file = fileInput.files[0];
-  const recipientId = document.getElementById("recipient").value;
+    socket.on("file upload", (data) => {
+      const chatBox = document.getElementById("chat-box");
+      const fileDiv = document.createElement("div");
+      fileDiv.className = "message";
 
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const base64String = event.target.result.split(',')[1];
-      socket.emit("file upload", {
-        recipientId: recipientId || null,
-        fileName: file.name,
-        fileData: base64String
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-}
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(data.fileName);
+      fileDiv.innerHTML = `<strong>${data.sender}:</strong> ` +
+        (isImage
+          ? `<img src="${data.fileUrl}" alt="${data.fileName}">`
+          : `<a href="${data.fileUrl}" download="${data.fileName}" target="_blank" style="color: yellow;">📁 ${data.fileName}</a>`);
 
-socket.on("file upload", (data) => {
-  const chatBox = document.getElementById("chat-box");
-  const fileDiv = document.createElement("div");
-  fileDiv.className = "message";
+      chatBox.appendChild(fileDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
 
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(data.fileName);
-  fileDiv.innerHTML = `<strong>${data.sender}:</strong> ` +
-    (isImage
-      ? `<img src="${data.fileUrl}" alt="${data.fileName}">`
-      : `<a href="${data.fileUrl}" download="${data.fileName}" target="_blank" style="color: yellow;">📁 ${data.fileName}</a>`);
+    const dropZone = document.getElementById("drop-zone");
 
-  chatBox.appendChild(fileDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
-});
-  const dropZone = document.getElementById("drop-zone");
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "yellow";
+    });
 
-dropZone.addEventListener("dragover", (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = "yellow";
-});
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.style.borderColor = "white";
+    });
 
-dropZone.addEventListener("dragleave", () => {
-  dropZone.style.borderColor = "white";
-});
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "white";
 
-dropZone.addEventListener("drop", (e) => {
-  e.preventDefault();
-  dropZone.style.borderColor = "white";
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const fileData = event.target.result.split(',')[1];
+          socket.emit("file upload", {
+            recipientId: document.getElementById("recipient").value || null,
+            fileName: file.name,
+            fileData
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      const fileData = event.target.result.split(',')[1];
-      socket.emit("file upload", {
-        recipientId: document.getElementById("recipient").value || null,
-        fileName: file.name,
-        fileData
-      });
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-</script>
+  </script>
 </body>
 </html>
