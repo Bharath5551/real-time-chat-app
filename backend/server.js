@@ -1,56 +1,38 @@
-const express = require("express");
-const http = require("http");
-const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
-const { Server } = require("socket.io");
-const cors = require("cors");
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  maxHttpBufferSize: 5e6
-});
-
-app.use(cors());
-app.use(express.static(path.join(__dirname, "../frontend")));
-
-const UPLOADS_DIR = path.join(__dirname, "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-app.use("/uploads", express.static(UPLOADS_DIR, {
-  setHeaders: (res, filePath) => {
-    res.setHeader("Access-Control-Allow-Origin", "*"); // ✅ Allow frontend from Vercel
-    res.setHeader("Content-Disposition", "inline");     // ✅ Ensures preview/download
-  }
-}));
-
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
-const ALLOWED_FILE_TYPES = ["jpg","jpeg","png","pdf","txt","mp4"];
-const DELETE_OLD_FILES = true;
-const ENCRYPT_FILE_NAMES = true;
-const users = {};
-
 io.on("connection", (socket) => {
   console.log(`🔗 User connected: ${socket.id}`);
-  socket.on("set username", (u) => {
-    users[socket.id] = u;
-    io.emit("user update", Object.values(users));
+
+  socket.on("set username", (username) => {
+    users[socket.id] = username;
+    io.emit("user update", users); // send full user map
   });
-  socket.on("chat message", (d) => {
+
+  socket.on("chat message", ({ message }) => {
     if (!users[socket.id]) return;
     io.emit("chat message", {
       username: users[socket.id],
-      message: d.message,
-      timestamp: new Date().toLocaleTimeString()
+      message,
+      timestamp: new Date().toLocaleTimeString(),
     });
   });
+
+  socket.on("private message", ({ recipientId, message }) => {
+    if (!users[socket.id]) return;
+    if (users[recipientId]) {
+      io.to(recipientId).emit("private message", {
+        sender: users[socket.id],
+        message,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+    }
+  });
+
   socket.on("file upload", ({ recipientId, fileName, fileData }) => {
     try {
-      const base64 = fileData.replace(/^data:.+;base64,/, "");
-      const buf = Buffer.from(base64, "base64");
+      // Your base64 processing assuming fileData is raw base64 string
+      const buf = Buffer.from(fileData, "base64");
+
       if (buf.length > MAX_FILE_SIZE) return socket.emit("error message", "❌ File too large");
+
       const ext = fileName.split(".").pop().toLowerCase();
       if (!ALLOWED_FILE_TYPES.includes(ext))
         return socket.emit("error message", "❌ File type not allowed");
@@ -71,28 +53,25 @@ io.on("connection", (socket) => {
 
       if (DELETE_OLD_FILES)
         setTimeout(() => {
-          fs.existsSync(filePath) && fs.unlinkSync(filePath);
-          console.log("🗑 Deleted:", filePath);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log("🗑 Deleted:", filePath);
+          }
         }, 10 * 60 * 1000);
-
     } catch (e) {
       console.error("❌ File upload error:", e);
       socket.emit("error message", "❌ Upload failed");
     }
   });
+
   socket.on("disconnect", () => {
     if (users[socket.id]) {
       socket.broadcast.emit("chat message", {
         username: "System",
-        message: `${users[socket.id]} left!`
+        message: `${users[socket.id]} left!`,
       });
       delete users[socket.id];
-      io.emit("user update", Object.values(users));
+      io.emit("user update", users);
     }
   });
-});
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
 });
