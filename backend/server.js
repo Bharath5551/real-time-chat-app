@@ -3,6 +3,7 @@ const http = require("http");
 const path = require("path");
 const fs = require("fs");
 const crypto = require("crypto");
+const { exec } = require("child_process");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
@@ -33,6 +34,18 @@ app.use("/uploads", express.static(UPLOADS_DIR, {
   }
 }));
 
+// Helper: call Java program
+function getWordCount(message, callback) {
+  exec(`java -cp java WordCount "${message}"`, (error, stdout) => {
+    if (error) {
+      console.error("Java error:", error);
+      callback(0);
+    } else {
+      callback(parseInt(stdout.trim()) || 0);
+    }
+  });
+}
+
 // ✅ Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log(`🔗 User connected: ${socket.id}`);
@@ -44,20 +57,27 @@ io.on("connection", (socket) => {
 
   socket.on("chat message", ({ message }) => {
     if (!users[socket.id]) return;
-    io.emit("chat message", {
-      username: users[socket.id],
-      message,
-      timestamp: new Date().toLocaleTimeString(),
+
+    getWordCount(message, (count) => {
+      io.emit("chat message", {
+        username: users[socket.id],
+        message,
+        wordCount: count,
+        timestamp: new Date().toLocaleTimeString(),
+      });
     });
   });
 
   socket.on("private message", ({ recipientId, message }) => {
     if (!users[socket.id]) return;
     if (users[recipientId]) {
-      io.to(recipientId).emit("private message", {
-        sender: users[socket.id],
-        message,
-        timestamp: new Date().toLocaleTimeString(),
+      getWordCount(message, (count) => {
+        io.to(recipientId).emit("private message", {
+          sender: users[socket.id],
+          message,
+          wordCount: count,
+          timestamp: new Date().toLocaleTimeString(),
+        });
       });
     }
   });
