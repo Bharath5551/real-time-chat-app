@@ -7,184 +7,185 @@
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <style>
     body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      color: white;
       margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f4f7fb;
       display: flex;
-      justify-content: center;
-      align-items: center;
       height: 100vh;
     }
-      #chat-container {
-      width: 95%;
-      max-width: 600px;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(12px);
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+
+    /* Sidebar */
+    .sidebar {
+      width: 20%;
+      background: #1d4ed8;
+      color: white;
       display: flex;
       flex-direction: column;
-      animation: fadeIn 0.8s ease-in-out;
+      padding: 20px 10px;
     }
-    
-
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-      font-size: 1.8rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .sidebar h2 {
+      margin: 0 0 20px 0;
     }
-
-    #chat-box {
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 10px;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.5);
-      margin-bottom: 15px;
-      scroll-behavior: smooth;
-    }
-
-    .message {
-      margin: 8px 0;
-      padding: 8px 12px;
-      border-radius: 12px;
-      line-height: 1.4;
-      animation: slideUp 0.3s ease-in-out;
-    }
-
-    .user-message {
-      background: rgba(76, 175, 80, 0.8);
-      text-align: right;
-      margin-left: auto;
-      max-width: 70%;
-    }
-
-    .other-message {
-      background: rgba(33, 150, 243, 0.8);
-      text-align: left;
-      margin-right: auto;
-      max-width: 70%;
-    }
-
-    .private-message {
-      background: rgba(255, 87, 34, 0.85);
-      border: 1px dashed yellow;
-      text-align: left;
-      margin-right: auto;
-      max-width: 70%;
-    }
-
-    #controls {
+    .contact {
       display: flex;
+      align-items: center;
       gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    textarea#message {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 10px;
-      resize: none;
-      font-family: inherit;
-    }
-
-    #sendBtn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #ff9800, #ff5722);
-      color: white;
-      transition: 0.3s;
-    }
-
-    #sendBtn:hover {
-      transform: scale(1.05);
-      background: linear-gradient(135deg, #ff5722, #e91e63);
-    }
-
-    select, input[type="file"] {
-      margin-top: 8px;
       padding: 8px;
       border-radius: 8px;
-      border: none;
-      width: 100%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .contact:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .contact img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
     }
 
-    #users-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 10px;
+    /* Chat panel */
+    .chat-panel {
+      flex: 1;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #ddd;
+      border-right: 1px solid #ddd;
     }
-
-    #drop-zone {
-      border: 2px dashed white;
+    .chat-header {
       padding: 15px;
-      margin-bottom: 15px;
-      text-align: center;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    .message {
+      margin: 10px 0;
+      max-width: 70%;
+      padding: 10px;
       border-radius: 12px;
-      transition: 0.3s;
+    }
+    .message.user {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+    }
+    .message.other {
+      background: #e5e7eb;
+      margin-right: auto;
+    }
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      outline: none;
+    }
+    .chat-input button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin-left: 10px;
+      cursor: pointer;
     }
 
-    #drop-zone:hover {
-      background: rgba(255, 255, 255, 0.1);
+    /* Profile panel */
+    .profile-panel {
+      width: 25%;
+      background: #f9fafb;
+      padding: 20px;
     }
-
-    img {
-      max-width: 100%;
+    .profile-panel img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto 10px;
+    }
+    .profile-panel h3 {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .section {
+      margin-top: 20px;
+    }
+    .section h4 {
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .section ul li {
+      background: #fff;
+      padding: 10px;
       border-radius: 8px;
-      margin-top: 5px;
-    }
-
-    .message-content {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      margin-top: 4px;
-    }
-
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-
-    @keyframes slideUp {
-      from {opacity: 0; transform: translateY(10px);}
-      to {opacity: 1; transform: translateY(0);}
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
   </style>
 </head>
 <body>
-  <div id="chat-container">
-    <h2>Creative Chat</h2>
-    <div id="chat-box"></div>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Chat</h2>
+    <div class="contact"><img src="https://i.pravatar.cc/40?img=1"><span>Karlyn</span></div>
+    <div class="contact"><img src="https://i.pravatar.cc/40?img=2"><span>Junior</span></div>
+    <div class="contact"><img src="https://i.pravatar.cc/40?img=3"><span>Melonie</span></div>
+  </div>
 
-    <div id="controls">
-      <textarea id="message" placeholder="Type a message..." rows="2"></textarea>
-      <button id="sendBtn" onclick="sendMessage()">Send</button>
+  <!-- Chat Panel -->
+  <div class="chat-panel">
+    <div class="chat-header">Melonie Sherk</div>
+    <div id="chat-box" class="chat-box"></div>
+    <div class="chat-input">
+      <input id="message" type="text" placeholder="Type a message...">
+      <button id="sendBtn">➤</button>
+    </div>
+  </div>
+
+  <!-- Profile Panel -->
+  <div class="profile-panel">
+    <img src="https://i.pravatar.cc/80?img=4" alt="User">
+    <h3>Wilburn Stoltenberg</h3>
+    <p style="text-align:center; color:gray;">CEO & Founder</p>
+
+    <div class="section">
+      <h4>📌 Starred Messages</h4>
+      <ul>
+        <li>Important update</li>
+      </ul>
     </div>
 
-    <select id="recipient">
-      <option value="">🌍 Public Chat</option>
-    </select>
+    <div class="section">
+      <h4>🖼 Media (43)</h4>
+      <ul>
+        <li>Photo_01.jpg</li>
+        <li>Photo_02.jpg</li>
+      </ul>
+    </div>
 
-    <input type="file" id="fileInput">
-    <button onclick="sendFile()" style="margin-top:8px;">📁 Send File</button>
-
-    <div id="drop-zone">⬇️ Drop files here to upload</div>
-
-    <div id="users-box">
-      <h3>👥 Online Users</h3>
-      <ul id="users-list"></ul>
+    <div class="section">
+      <h4>📁 Files & Docs</h4>
+      <ul>
+        <li>Mockup_Design.zip</li>
+        <li>Wireframe.pdf</li>
+      </ul>
     </div>
   </div>
 
@@ -198,17 +199,13 @@
     function sendMessage() {
       const input = document.getElementById("message");
       const message = input.value.trim();
-      const recipientId = document.getElementById("recipient").value;
-
       if (message) {
-        if (recipientId) {
-          socket.emit("private message", { recipientId, message });
-        } else {
-          socket.emit("chat message", { message });
-        }
+        socket.emit("chat message", { message });
         input.value = "";
       }
     }
+
+    document.getElementById("sendBtn").addEventListener("click", sendMessage);
 
     document.getElementById("message").addEventListener("keydown", function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -220,99 +217,10 @@
     socket.on("chat message", (data) => {
       const chatBox = document.getElementById("chat-box");
       const msgDiv = document.createElement("div");
-      msgDiv.className = "message " + (data.username === username ? "user-message" : "other-message");
-      msgDiv.innerHTML = `<strong>${data.username}:</strong> <div class="message-content"></div>`;
-      msgDiv.querySelector(".message-content").textContent = data.message;
+      msgDiv.className = "message " + (data.username === username ? "user" : "other");
+      msgDiv.textContent = `${data.username}: ${data.message}`;
       chatBox.appendChild(msgDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    socket.on("private message", (data) => {
-      const chatBox = document.getElementById("chat-box");
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "message private-message";
-      msgDiv.innerHTML = `<strong>[Private] ${data.sender}:</strong> <div class="message-content"></div>`;
-      msgDiv.querySelector(".message-content").textContent = data.message;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    socket.on("user update", (users) => {
-      const usersList = document.getElementById("users-list");
-      const recipientSelect = document.getElementById("recipient");
-      usersList.innerHTML = "";
-      recipientSelect.innerHTML = `<option value="">🌍 Public Chat</option>`;
-
-      Object.entries(users).forEach(([id, user]) => {
-        if (id !== socket.id) {
-          usersList.innerHTML += `<li>${user}</li>`;
-          recipientSelect.innerHTML += `<option value="${id}">${user}</option>`;
-        }
-      });
-    });
-
-    function sendFile() {
-      const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];
-      const recipientId = document.getElementById("recipient").value;
-
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const base64String = event.target.result.split(',')[1];
-          socket.emit("file upload", {
-            recipientId: recipientId || null,
-            fileName: file.name,
-            fileData: base64String
-          });
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    socket.on("file upload", (data) => {
-      const chatBox = document.getElementById("chat-box");
-      const fileDiv = document.createElement("div");
-      fileDiv.className = "message";
-
-      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(data.fileName);
-      fileDiv.innerHTML = `<strong>${data.sender}:</strong> ` +
-        (isImage
-          ? `<img src="${data.fileUrl}" alt="${data.fileName}">`
-          : `<a href="${data.fileUrl}" download="${data.fileName}" target="_blank" style="color: yellow;">📁 ${data.fileName}</a>`);
-
-      chatBox.appendChild(fileDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    const dropZone = document.getElementById("drop-zone");
-
-    dropZone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropZone.style.borderColor = "yellow";
-    });
-
-    dropZone.addEventListener("dragleave", () => {
-      dropZone.style.borderColor = "white";
-    });
-
-    dropZone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      dropZone.style.borderColor = "white";
-
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const fileData = event.target.result.split(',')[1];
-          socket.emit("file upload", {
-            recipientId: document.getElementById("recipient").value || null,
-            fileName: file.name,
-            fileData
-          });
-        };
-        reader.readAsDataURL(file);
-      }
     });
   </script>
 </body>
