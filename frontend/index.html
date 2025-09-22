@@ -27,21 +27,10 @@
       margin: 0 0 20px 0;
     }
     .contact {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
       border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    .contact:hover {
-      background: rgba(255,255,255,0.2);
-    }
-    .contact img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
     }
 
     /* Chat panel */
@@ -51,7 +40,6 @@
       display: flex;
       flex-direction: column;
       border-left: 1px solid #ddd;
-      border-right: 1px solid #ddd;
     }
     .chat-header {
       padding: 15px;
@@ -100,53 +88,13 @@
       margin-left: 10px;
       cursor: pointer;
     }
-
-    /* Profile panel */
-    .profile-panel {
-      width: 25%;
-      background: #f9fafb;
-      padding: 20px;
-    }
-    .profile-panel img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      display: block;
-      margin: 0 auto 10px;
-    }
-    .profile-panel h3 {
-      text-align: center;
-      margin: 10px 0;
-    }
-    .section {
-      margin-top: 20px;
-    }
-    .section h4 {
-      margin-bottom: 10px;
-      font-size: 14px;
-      color: #6b7280;
-    }
-    .section ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .section ul li {
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
   </style>
 </head>
 <body>
   <!-- Sidebar -->
   <div class="sidebar">
-    <h2>Chat</h2>
-    <div class="contact"><img src="https://i.pravatar.cc/40?img=1"><span>Karlyn</span></div>
-    <div class="contact"><img src="https://i.pravatar.cc/40?img=2"><span>Junior</span></div>
-    <div class="contact"><img src="https://i.pravatar.cc/40?img=3"><span>Melonie</span></div>
+    <h2>Members</h2>
+    <div id="membersList"></div>
   </div>
 
   <!-- Chat Panel -->
@@ -159,36 +107,6 @@
     </div>
   </div>
 
-  <!-- Profile Panel -->
-  <div class="profile-panel">
-    <img src="https://i.pravatar.cc/80?img=4" alt="User">
-    <h3>Bharath M</h3>
-    <p style="text-align:center; color:gray;">CEO & Founder</p>
-
-    <div class="section">
-      <h4>📌 Starred Messages</h4>
-      <ul>
-        <li>Important update</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h4>🖼 Media (43)</h4>
-      <ul>
-        <li>Photo_01.jpg</li>
-        <li>Photo_02.jpg</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h4>📁 Files & Docs</h4>
-      <ul>
-        <li>Mockup_Design.zip</li>
-        <li>Wireframe.pdf</li>
-      </ul>
-    </div>
-  </div>
-
   <script>
     const socket = io("https://chat-real-kr4m.onrender.com");
 
@@ -196,6 +114,7 @@
     while (!username) username = prompt("Enter your name:");
     socket.emit("set username", username);
 
+    // Send message
     function sendMessage() {
       const input = document.getElementById("message");
       const message = input.value.trim();
@@ -204,9 +123,7 @@
         input.value = "";
       }
     }
-
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
-
     document.getElementById("message").addEventListener("keydown", function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
@@ -214,6 +131,7 @@
       }
     });
 
+    // Show incoming messages
     socket.on("chat message", (data) => {
       const chatBox = document.getElementById("chat-box");
       const msgDiv = document.createElement("div");
@@ -221,6 +139,15 @@
       msgDiv.textContent = `${data.username}: ${data.message}`;
       chatBox.appendChild(msgDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
+    });
+
+    // Show members dynamically
+    socket.on("new member", (name) => {
+      const membersList = document.getElementById("membersList");
+      const div = document.createElement("div");
+      div.className = "contact";
+      div.textContent = name;
+      membersList.appendChild(div);
     });
   </script>
 </body>
