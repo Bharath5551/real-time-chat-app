@@ -66,12 +66,6 @@
       background: #e5e7eb;
       margin-right: auto;
     }
-    .system-message {
-      text-align: center;
-      font-size: 0.9em;
-      color: #6b7280;
-      margin: 10px 0;
-    }
     .chat-input {
       display: flex;
       padding: 10px;
@@ -125,7 +119,7 @@
       const input = document.getElementById("message");
       const message = input.value.trim();
       if (message) {
-        socket.emit("chat message", { username, message });
+        socket.emit("chat message", { message });
 
         // show instantly for sender
         const chatBox = document.getElementById("chat-box");
@@ -138,7 +132,6 @@
         input.value = "";
       }
     }
-
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
     document.getElementById("message").addEventListener("keydown", function(e) {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -147,9 +140,9 @@
       }
     });
 
-    // ✅ Show incoming messages
+    // ✅ Show incoming messages from others
     socket.on("chat message", (data) => {
-      if (data.username === username) return; // skip own
+      if (data.username === username) return; // skip own (already shown)
       const chatBox = document.getElementById("chat-box");
       const msgDiv = document.createElement("div");
       msgDiv.className = "message other";
@@ -158,10 +151,17 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // ✅ Show system messages (user joined/left)
-    socket.on("system message", (msg) => {
-      const chatBox = document.getElementById("chat-box");
-      const sysDiv = document.createElement("div");
-      sysDiv.className = "system-message";
-      sysDiv.textContent = msg;
-      chatBox.append
+    // ✅ Update members list from server
+    socket.on("user update", (users) => {
+      const membersList = document.getElementById("membersList");
+      membersList.innerHTML = "";
+      Object.values(users).forEach((name) => {
+        const div = document.createElement("div");
+        div.className = "contact";
+        div.textContent = name;
+        membersList.appendChild(div);
+      });
+    });
+  </script>
+</body>
+</html>
