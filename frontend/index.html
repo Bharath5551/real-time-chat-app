@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
   
   <style>
+    /* All your existing CSS styles remain the same... */
     :root {
       --primary-bg: #1a1a2e;
       --secondary-bg: #16213e;
@@ -76,7 +77,6 @@
       flex-direction: column;
     }
 
-    /* Custom scrollbar for a better look */
     #chat-box::-webkit-scrollbar {
       width: 8px;
     }
@@ -92,6 +92,7 @@
       display: flex;
       padding: 16px;
       background: var(--sidebar-bg);
+      align-items: center; /* Align items vertically */
     }
 
     #message {
@@ -108,7 +109,7 @@
         box-shadow: 0 0 0 2px var(--accent-color);
     }
 
-    #sendBtn {
+    #sendBtn, #uploadBtn {
       padding: 12px 24px;
       margin-left: 12px;
       border: none;
@@ -120,9 +121,14 @@
       transition: background-color 0.3s ease, transform 0.2s ease;
     }
     
-    #sendBtn:hover {
+    #sendBtn:hover, #uploadBtn:hover {
       background-color: #ff5777;
       transform: scale(1.05);
+    }
+    
+    /* Hide the actual file input */
+    #fileInput {
+        display: none;
     }
 
     /* Message Styling */
@@ -132,6 +138,7 @@
       margin: 8px 0;
       max-width: 70%;
       animation: fadeIn 0.5s ease;
+      word-wrap: break-word; /* Ensure long words don't overflow */
     }
     
     .message.user {
@@ -155,6 +162,18 @@
       font-size: 14px;
     }
 
+    /* Styles for file messages */
+    .message img {
+        max-width: 100%;
+        border-radius: 10px;
+        margin-top: 5px;
+    }
+    .message a {
+        color: #fff;
+        text-decoration: underline;
+        font-weight: bold;
+    }
+
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
@@ -170,6 +189,9 @@
   <div class="chat">
     <div id="chat-box"></div>
     <div class="input-area">
+      <input type="file" id="fileInput" />
+      <button id="uploadBtn">Upload</button>
+      
       <input id="message" type="text" placeholder="Type your message..." autocomplete="off"/>
       <button id="sendBtn">Send</button>
     </div>
@@ -177,14 +199,17 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    // --- All your JavaScript functionality remains exactly the same ---
-    const socket = io("https://chat-real-kr4m.onrender.com", { transports: ["websocket"] });
+    const socket = io("YOUR_BACKEND_URL", { transports: ["websocket"] }); // Remember to replace this
 
     let username = prompt("Enter your username:") || "Guest";
     socket.emit("set-username", username);
 
     const sendBtn = document.getElementById("sendBtn");
     const messageInput = document.getElementById("message");
+    
+    // **NEW: Get file input elements**
+    const uploadBtn = document.getElementById("uploadBtn");
+    const fileInput = document.getElementById("fileInput");
 
     function sendMessage() {
       const msg = messageInput.value.trim();
@@ -192,30 +217,60 @@
       socket.emit("chat-message", msg);
       messageInput.value = "";
     }
+    
+    // **NEW: Add event listeners for file upload**
+    uploadBtn.addEventListener("click", () => fileInput.click()); // Trigger file input when button is clicked
+
+    fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Emit the file to the server
+        socket.emit("file-upload", {
+            file: file, // The file object itself
+            fileName: file.name,
+            fileType: file.type
+        });
+    });
 
     sendBtn.addEventListener("click", sendMessage);
     messageInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
 
     socket.on("chat-message", (data) => {
+      // Logic for displaying text messages remains the same
       const box = document.getElementById("chat-box");
       const div = document.createElement("div");
       div.className = data.userId === socket.id ? "message user" : "message other";
       
-      const userLabel = document.createElement("strong");
-      userLabel.textContent = data.username;
-      
-      const messageText = document.createElement("div");
-      messageText.textContent = data.message;
-      
-      // Clear previous content and append new structure
-      div.innerHTML = ''; 
-      div.appendChild(userLabel);
-      div.appendChild(messageText);
+      div.innerHTML = `<strong>${data.username}</strong><div>${data.message}</div>`;
 
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
     });
 
+    // **NEW: Listen for and display file messages**
+    socket.on("file-message", (data) => {
+        const box = document.getElementById("chat-box");
+        const div = document.createElement("div");
+        div.className = data.userId === socket.id ? "message user" : "message other";
+
+        const blob = new Blob([data.file], { type: data.fileType });
+        const url = URL.createObjectURL(blob);
+        
+        let fileElement;
+        // Display images directly, otherwise provide a download link
+        if (data.fileType.startsWith("image/")) {
+            fileElement = `<img src="${url}" alt="${data.fileName}" />`;
+        } else {
+            fileElement = `<a href="${url}" download="${data.fileName}">Download ${data.fileName}</a>`;
+        }
+        
+        div.innerHTML = `<strong>${data.username}</strong><div>${fileElement}</div>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    });
+
+    // Other socket listeners (user-joined, user-left, user-update) remain the same
     socket.on("user-joined", data => addSystem(`${data.username} joined the chat`));
     socket.on("user-left", data => addSystem(`${data.username} left the chat`));
 
