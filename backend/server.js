@@ -21,7 +21,7 @@ const io = new Server(server, {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Serve frontend if hosting on same server (optional)
 app.use(express.static(path.join(__dirname, "public")));
@@ -69,3 +69,4 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log(`Server running: http://localhost:${PORT}`);
 });
+
