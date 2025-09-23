@@ -1,8 +1,6 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -10,36 +8,28 @@ const admin = require("firebase-admin");
 
 dotenv.config();
 
-// 🔹 Firebase setup
+// Firebase setup
 const serviceAccount = require("./firebase-service-account.json");
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL:
-    "https://chat-project-93a4f-default-rtdb.asia-southeast1.firebasedatabase.app/", // replace with your DB URL
+  databaseURL: process.env.FIREBASE_DB_URL
 });
-
 const db = admin.database();
 
-// 🔹 Express + Socket.IO setup
+// Express + Socket.IO setup
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
-  maxHttpBufferSize: 5e6,
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// ✅ Socket.IO connection handling
 io.on("connection", (socket) => {
-  console.log("🔗 User connected:", socket.id);
+  console.log("User connected:", socket.id);
 
-  // Set username
+  // Username setup
   socket.on("set username", async (username) => {
     await db.ref("users/" + socket.id).set(username);
 
@@ -56,10 +46,8 @@ io.on("connection", (socket) => {
 
     const msgData = { username, message, timestamp: Date.now() };
 
-    // Save to DB
     await db.ref("messages").push(msgData);
 
-    // Broadcast to everyone (including sender)
     io.emit("chat message", msgData);
   });
 
@@ -78,7 +66,4 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Start server
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
