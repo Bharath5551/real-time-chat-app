@@ -33,8 +33,7 @@
   </div>
 
 <script>
-  const socket = io();
-
+  const socket = io("https://chat-real-kr4m.onrender.com");
   // Ask for username
   let username = prompt("Enter your username:");
   if (!username) username = "Guest";
