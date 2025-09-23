@@ -1,56 +1,69 @@
 const express = require("express");
 const http = require("http");
+const path = require("path");
+const fs = require("fs");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
+const cors = require("cors");
+const dotenv = require("dotenv");
 const admin = require("firebase-admin");
+
+dotenv.config();
+
+// 🔹 Firebase setup
 const serviceAccount = require("./firebase-service-account.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: process.env.FIREBASE_DB_URL
+  databaseURL:
+    "https://chat-project-93a4f-default-rtdb.asia-southeast1.firebasedatabase.app/", // replace with your DB URL
 });
 
 const db = admin.database();
 
+// 🔹 Express + Socket.IO setup
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: "*", methods: ["GET", "POST"] },
+  maxHttpBufferSize: 5e6,
 });
 
-app.get("/", (req, res) => {
-  res.send("Chat App Backend Running");
-});
+const PORT = process.env.PORT || 3000;
 
+// Middleware
+app.use(cors());
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// ✅ Socket.IO connection handling
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("🔗 User connected:", socket.id);
 
   // Set username
   socket.on("set username", async (username) => {
     await db.ref("users/" + socket.id).set(username);
 
-    // Notify all users
     io.emit("system message", `${username} joined the chat`);
 
-    // Update users list
     const usersSnap = await db.ref("users").once("value");
     io.emit("user update", usersSnap.val());
   });
 
-  // Handle chat message
+  // Chat message
   socket.on("chat message", async ({ message }) => {
     const userSnap = await db.ref("users/" + socket.id).once("value");
     const username = userSnap.val() || "Unknown";
 
-    const msgData = { username, message };
+    const msgData = { username, message, timestamp: Date.now() };
 
-    // Save in Firebase
+    // Save to DB
     await db.ref("messages").push(msgData);
 
-    // Broadcast to all
+    // Broadcast to everyone (including sender)
     io.emit("chat message", msgData);
   });
 
-  // On disconnect
+  // Disconnect
   socket.on("disconnect", async () => {
     const userSnap = await db.ref("users/" + socket.id).once("value");
     const username = userSnap.val();
@@ -65,7 +78,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+// ✅ Start server
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
