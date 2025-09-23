@@ -199,7 +199,7 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
-    const socket = io("YOUR_BACKEND_URL", { transports: ["websocket"] }); // Remember to replace this
+    const socket = io("https://chat-real-kr4m.onrender.com/", { transports: ["websocket"] }); // Remember to replace this
 
     let username = prompt("Enter your username:") || "Guest";
     socket.emit("set-username", username);
