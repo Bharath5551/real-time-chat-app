@@ -7,24 +7,18 @@ const cors = require("cors");
 const app = express();
 const server = http.createServer(app);
 
-// Allow frontend hosted on Vercel to access backend
-app.use(cors({
-  origin: "https://chat-real-project.vercel.app", // replace with your frontend URL
-  methods: ["GET", "POST"],
-  credentials: true
-}));
-
+// Enable CORS for frontend
 const io = new Server(server, {
   cors: {
-    origin: "https://chat-real-project.vercel.app",
+    origin: "https://chat-real-project.vercel.app", // your frontend URL
     methods: ["GET", "POST"]
   }
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10000; // Use Render port
 
-// Serve frontend if hosting on same server (optional)
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files if needed (optional)
+// app.use(express.static(path.join(__dirname, "public")));
 
 let users = {}; // { socketId: username }
 
@@ -57,7 +51,6 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const username = users[socket.id];
     console.log("User disconnected:", socket.id, `(${username || "no-username"})`);
-
     if (username) {
       io.emit("user-left", { userId: socket.id, username });
       delete users[socket.id];
@@ -67,6 +60,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running: http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
-
