@@ -1,92 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Creative Chat</title>
-  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Chat App</title>
+  <!-- Socket.io client CDN -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"
+          integrity="sha384-PiQ1fC4/3h3Nv+R4bHQJ6Uk1+6h4fN6z8xZf3Z4Zp+7tY1rJZtGqHq4NTLJQNkf5"
+          crossorigin="anonymous"></script>
   <style>
-    body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: #f4f7fb; display: flex; height: 100vh; }
-    .sidebar { width: 20%; background: #1d4ed8; color: white; display: flex; flex-direction: column; padding: 20px 10px; }
-    .sidebar h2 { margin: 0 0 20px 0; }
-    .contact { padding: 10px; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,0.15); }
-    .chat-panel { flex: 1; background: #fff; display: flex; flex-direction: column; border-left: 1px solid #ddd; }
-    .chat-header { padding: 15px; border-bottom: 1px solid #ddd; font-weight: bold; }
-    .chat-box { flex: 1; padding: 15px; overflow-y: auto; }
-    .message { margin: 10px 0; max-width: 70%; padding: 10px; border-radius: 12px; }
-    .message.user { background: #2563eb; color: white; margin-left: auto; }
-    .message.other { background: #e5e7eb; margin-right: auto; }
-    .message.system { background: #fcd34d; color: #000; text-align: center; margin: 10px auto; max-width: 90%; }
-    .chat-input { display: flex; padding: 10px; border-top: 1px solid #ddd; }
-    .chat-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
-    .chat-input button { background: #2563eb; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; margin-left: 10px; cursor: pointer; }
+    body{font-family:Arial;margin:0;display:flex;height:100vh}
+    .sidebar{width:20%;background:#1d4ed8;color:#fff;padding:16px;box-sizing:border-box}
+    .chat{flex:1;display:flex;flex-direction:column}
+    #chat-box{flex:1;padding:12px;overflow:auto;border-left:1px solid #ddd}
+    .input{display:flex;padding:8px;border-top:1px solid #ddd}
+    input{flex:1;padding:8px}
+    button{padding:8px 12px;margin-left:8px}
+    .message.user{background:#2563eb;color:#fff;padding:8px;border-radius:8px;margin:6px 0;text-align:right;max-width:70%;margin-left:auto}
+    .message.other{background:#e5e7eb;padding:8px;border-radius:8px;margin:6px 0;max-width:70%}
+    .system{color:#666;text-align:center;margin:8px 0;font-style:italic}
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <h2>Members</h2>
+    <h3>Members</h3>
     <div id="membersList"></div>
   </div>
 
-  <div class="chat-panel">
-    <div class="chat-header">Chat Application</div>
-    <div id="chat-box" class="chat-box"></div>
-    <div class="chat-input">
-      <input id="message" type="text" placeholder="Type a message...">
-      <button id="sendBtn">➤</button>
+  <div class="chat">
+    <div id="chat-box"></div>
+    <div class="input">
+      <input id="message" type="text" placeholder="Type message..." />
+      <button id="sendBtn">Send</button>
     </div>
   </div>
 
-  <script>
-    const socket = io("http://localhost:3000"); // 🔹 Change to your deployed backend URL
+<script>
+  // Connect to backend on Render
+  const socket = io("https://chat-real-kr4m.onrender.com", {
+    transports: ["websocket"]
+  });
 
-    let username = prompt("Enter your name:");
-    while (!username) username = prompt("Enter your name:");
-    socket.emit("set username", username);
+  // Prompt username
+  let username = prompt("Enter your username:");
+  if (!username) username = "Guest";
+  socket.emit("set-username", username);
 
-    function sendMessage() {
-      const input = document.getElementById("message");
-      const message = input.value.trim();
-      if (message) {
-        socket.emit("chat message", { message });
-        input.value = "";
-      }
-    }
-    document.getElementById("sendBtn").addEventListener("click", sendMessage);
-    document.getElementById("message").addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  // Send message
+  const sendMessage = () => {
+    const input = document.getElementById("message");
+    const msg = input.value.trim();
+    if (!msg) return;
+    socket.emit("chat-message", msg);
+    input.value = "";
+  };
+
+  document.getElementById("sendBtn").addEventListener("click", sendMessage);
+  document.getElementById("message").addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  // Display chat message
+  socket.on("chat-message", (data) => {
+    const box = document.getElementById("chat-box");
+    const div = document.createElement("div");
+    div.className = data.userId === socket.id ? "message user" : "message other";
+    div.textContent = `${data.username}: ${data.message}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  });
+
+  // Display system messages
+  const addSystem = (msg) => {
+    const box = document.getElementById("chat-box");
+    const div = document.createElement("div");
+    div.className = "system";
+    div.textContent = msg;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  };
+
+  socket.on("user-joined", (data) => addSystem(`${data.username} joined the chat`));
+  socket.on("user-left", (data) => addSystem(`${data.username} left the chat`));
+
+  // Update members list
+  socket.on("user update", (users) => {
+    const members = document.getElementById("membersList");
+    members.innerHTML = "";
+    Object.values(users).forEach(name => {
+      const d = document.createElement("div");
+      d.textContent = name;
+      members.appendChild(d);
     });
-
-    socket.on("chat message", (data) => {
-      const chatBox = document.getElementById("chat-box");
-      const msgDiv = document.createElement("div");
-      msgDiv.className = data.username === username ? "message user" : "message other";
-      msgDiv.textContent = `${data.username}: ${data.message}`;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    socket.on("system message", (msg) => {
-      const chatBox = document.getElementById("chat-box");
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "message system";
-      msgDiv.textContent = msg;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-
-    socket.on("user update", (users) => {
-      const membersList = document.getElementById("membersList");
-      membersList.innerHTML = "";
-      if (users) {
-        Object.values(users).forEach((name) => {
-          const div = document.createElement("div");
-          div.className = "contact";
-          div.textContent = name;
-          membersList.appendChild(div);
-        });
-      }
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
