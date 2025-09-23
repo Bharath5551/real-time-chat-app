@@ -6,105 +6,28 @@
   <title>Creative Chat</title>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      background: #f4f7fb;
-      display: flex;
-      height: 100vh;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 20%;
-      background: #1d4ed8;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      padding: 20px 10px;
-    }
-    .sidebar h2 {
-      margin: 0 0 20px 0;
-    }
-    .contact {
-      padding: 10px;
-      margin-bottom: 8px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.15);
-    }
-
-    /* Chat panel */
-    .chat-panel {
-      flex: 1;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      border-left: 1px solid #ddd;
-    }
-    .chat-header {
-      padding: 15px;
-      border-bottom: 1px solid #ddd;
-      font-weight: bold;
-    }
-    .chat-box {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-    }
-    .message {
-      margin: 10px 0;
-      max-width: 70%;
-      padding: 10px;
-      border-radius: 12px;
-    }
-    .message.user {
-      background: #2563eb;
-      color: white;
-      margin-left: auto;
-    }
-    .message.other {
-      background: #e5e7eb;
-      margin-right: auto;
-    }
-    .message.system {
-      background: #fcd34d;
-      color: #000;
-      text-align: center;
-      margin: 10px auto;
-      max-width: 90%;
-    }
-    .chat-input {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ddd;
-    }
-    .chat-input input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      outline: none;
-    }
-    .chat-input button {
-      background: #2563eb;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      margin-left: 10px;
-      cursor: pointer;
-    }
+    body { margin: 0; font-family: "Segoe UI", Tahoma, sans-serif; background: #f4f7fb; display: flex; height: 100vh; }
+    .sidebar { width: 20%; background: #1d4ed8; color: white; display: flex; flex-direction: column; padding: 20px 10px; }
+    .sidebar h2 { margin: 0 0 20px 0; }
+    .contact { padding: 10px; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,0.15); }
+    .chat-panel { flex: 1; background: #fff; display: flex; flex-direction: column; border-left: 1px solid #ddd; }
+    .chat-header { padding: 15px; border-bottom: 1px solid #ddd; font-weight: bold; }
+    .chat-box { flex: 1; padding: 15px; overflow-y: auto; }
+    .message { margin: 10px 0; max-width: 70%; padding: 10px; border-radius: 12px; }
+    .message.user { background: #2563eb; color: white; margin-left: auto; }
+    .message.other { background: #e5e7eb; margin-right: auto; }
+    .message.system { background: #fcd34d; color: #000; text-align: center; margin: 10px auto; max-width: 90%; }
+    .chat-input { display: flex; padding: 10px; border-top: 1px solid #ddd; }
+    .chat-input input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+    .chat-input button { background: #2563eb; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; margin-left: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
     <h2>Members</h2>
     <div id="membersList"></div>
   </div>
 
-  <!-- Chat Panel -->
   <div class="chat-panel">
     <div class="chat-header">Chat Application</div>
     <div id="chat-box" class="chat-box"></div>
@@ -115,13 +38,12 @@
   </div>
 
   <script>
-    const socket = io("https://chat-real-kr4m.onrender.com");
+    const socket = io("http://localhost:3000"); // 🔹 Change to your deployed backend URL
 
     let username = prompt("Enter your name:");
     while (!username) username = prompt("Enter your name:");
     socket.emit("set username", username);
 
-    // ✅ Send message
     function sendMessage() {
       const input = document.getElementById("message");
       const message = input.value.trim();
@@ -131,14 +53,10 @@
       }
     }
     document.getElementById("sendBtn").addEventListener("click", sendMessage);
-    document.getElementById("message").addEventListener("keydown", function(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
+    document.getElementById("message").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     });
 
-    // ✅ Show messages
     socket.on("chat message", (data) => {
       const chatBox = document.getElementById("chat-box");
       const msgDiv = document.createElement("div");
@@ -148,7 +66,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // ✅ System messages
     socket.on("system message", (msg) => {
       const chatBox = document.getElementById("chat-box");
       const msgDiv = document.createElement("div");
@@ -158,7 +75,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     });
 
-    // ✅ Update members list
     socket.on("user update", (users) => {
       const membersList = document.getElementById("membersList");
       membersList.innerHTML = "";
