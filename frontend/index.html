@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Chat App - Modern</title>
+  <title>Chat App - Code-friendly</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
       --primary-bg:#1a1a2e;
@@ -63,10 +63,10 @@
     #sendBtn{background:var(--accent-color);border:none;color:#fff;padding:10px 18px;border-radius:999px;cursor:pointer;font-weight:600}
 
     /* MESSAGE BUBBLE LAYOUT */
-    .message-row{display:flex;width:100%} /* container row to allow proper alignment */
+    .message-row{display:flex;width:100%}
     .message{
       display:flex;flex-direction:column;max-width:75%;
-      gap:6px;padding:0; /* bubble handled in .bubble */
+      gap:6px;padding:0;
     }
     .message.user{margin-left:auto;align-items:flex-end}
     .message.other{margin-right:auto;align-items:flex-start}
@@ -82,9 +82,28 @@
       padding:12px 16px;border-radius:14px;line-height:1.4;
       word-wrap:break-word;white-space:pre-wrap;
       box-shadow:0 2px 8px rgba(0,0,0,0.15);
+      background:var(--other-message-bg); color:var(--text-color);
+      font-size:15px;
     }
     .message.user .bubble{background:var(--user-message-bg);color:#fff;border-bottom-right-radius:6px}
     .message.other .bubble{background:var(--other-message-bg);color:var(--text-color);border-bottom-left-radius:6px}
+
+    /* Code block styling inside bubble */
+    .bubble pre{
+      margin:0;
+      padding:12px;
+      border-radius:8px;
+      background:rgba(0,0,0,0.12);
+      overflow:auto;
+      max-height:360px;
+      font-family:"Source Code Pro", monospace;
+      font-size:13px;
+      line-height:1.45;
+      white-space:pre-wrap; /* preserve indentation and wrap long lines */
+      word-break:break-word;
+    }
+    .bubble pre code{display:block; color:inherit; font-family:inherit}
+    .bubble.code{padding:10px 12px} /* slightly tighter for code */
 
     .system{align-self:center;color:var(--system-message-color);font-style:italic;padding:6px 12px}
   </style>
@@ -118,8 +137,7 @@
     let username = (prompt("Enter your username:") || "Guest").slice(0,64);
     socket.emit("set-username", username);
 
-    // helpers
-    function esc(str){ return String(str || "").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function esc(s){ return String(s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
     function formatTime(t){
       if(!t) return new Date().toLocaleTimeString();
       const d = isNaN(Date.parse(t)) ? new Date() : new Date(t);
@@ -138,10 +156,9 @@
         return;
       }
 
-      // normalize: if 'history' format isn't same, try to map
-      const userId = data.userId || data.id || data.fromId || "";
+      const userId = data.userId || data.id || "";
       const name = data.username || data.name || "Unknown";
-      const text = data.message || data.text || data.body || "";
+      const text = data.message || data.text || "";
       const time = data.time || data.timestamp || null;
 
       const isSelf = (userId === socket.id) || (name === username);
@@ -154,11 +171,35 @@
 
       const meta = document.createElement("div");
       meta.className = "meta";
-      meta.innerHTML = `<span class="name">${esc(name)}</span><span class="time">${formatTime(time)}</span>`;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "name";
+      nameSpan.textContent = name;
+      const timeSpan = document.createElement("span");
+      timeSpan.className = "time";
+      timeSpan.textContent = formatTime(time);
+      meta.appendChild(nameSpan);
+      meta.appendChild(timeSpan);
 
       const bubble = document.createElement("div");
       bubble.className = "bubble";
-      bubble.innerHTML = esc(text);
+
+      // Detect code: contains newline or triple-backtick or long block with braces/semicolons
+      const isCode = /\n/.test(text) || /^```/.test(text) || (text.length > 120 && /[{};()<>]/.test(text));
+
+      if(isCode){
+        bubble.classList.add("code");
+        const pre = document.createElement("pre");
+        const code = document.createElement("code");
+        // keep original indentation and characters
+        code.textContent = text.replace(/^```(?:\w+)?\n|```$/g, "");
+        pre.appendChild(code);
+        bubble.appendChild(pre);
+      } else {
+        // normal text, preserve simple line breaks
+        const p = document.createElement("div");
+        p.textContent = text;
+        bubble.appendChild(p);
+      }
 
       msg.appendChild(meta);
       msg.appendChild(bubble);
@@ -206,7 +247,7 @@
       });
     });
 
-    // initial load
+    // initial
     loadChatHistory();
   </script>
 </body>
