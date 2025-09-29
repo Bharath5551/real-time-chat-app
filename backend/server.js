@@ -1,25 +1,25 @@
+// server.js
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
-const path = require("path");
 const cors = require("cors");
+
+// For message saving to Java API
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
 const app = express();
 const server = http.createServer(app);
 
-// Enable CORS for frontend
+app.use(cors());
+
 const io = new Server(server, {
   cors: {
-    origin: "https://chat-real-project.vercel.app", // your frontend URL
+    origin: "https://chat-real-project.vercel.app", // Your frontend URL
     methods: ["GET", "POST"]
   }
 });
 
-const PORT = process.env.PORT || 10000; // Use Render port
-
-// Serve static files if needed (optional)
-// app.use(express.static(path.join(__dirname, "public")));
-
+const PORT = process.env.PORT || 10000;
 let users = {}; // { socketId: username }
 
 io.on("connection", (socket) => {
@@ -29,28 +29,47 @@ io.on("connection", (socket) => {
   socket.on("set-username", (username) => {
     if (!username) username = "Anonymous";
     users[socket.id] = username;
-
     console.log(`${username} joined (id=${socket.id})`);
 
     io.emit("user-joined", { userId: socket.id, username });
     io.emit("user update", users);
   });
 
-  // Chat message
-  socket.on("chat-message", (msg) => {
+  // Handle chat messages
+  socket.on("chat-message", async (msg) => {
     const username = users[socket.id] || "Anonymous";
-    io.emit("chat-message", {
+    const messageData = {
       userId: socket.id,
       username,
       message: msg,
-      time: new Date().toLocaleTimeString(),
-    });
+      time: new Date().toLocaleTimeString()
+    };
+
+    // Send to all clients
+    io.emit("chat-message", messageData);
+
+    // Save message to Java API
+    try {
+      await fetch("https://java-chat-api-v2.onrender.com/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          message: msg,
+          timestamp: new Date().toISOString()
+        })
+      });
+      console.log(`✅ Message saved to Java API: ${msg}`);
+    } catch (err) {
+      console.error("❌ Failed to save message to Java API:", err);
+    }
   });
 
-  // Disconnect
+  // Handle disconnect
   socket.on("disconnect", () => {
     const username = users[socket.id];
     console.log("User disconnected:", socket.id, `(${username || "no-username"})`);
+
     if (username) {
       io.emit("user-left", { userId: socket.id, username });
       delete users[socket.id];
@@ -60,6 +79,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
-
