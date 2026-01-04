@@ -99,10 +99,9 @@
     sendBtn.onclick = sendMessage;
     messageInput.onkeydown = e => { if(e.key === "Enter") sendMessage(); };
 
-    socket.on("connect", ()=> addMessage("Connected to server", "system"));
+    
     socket.on("chat-message", d => addMessage(d, "chat"));
-    socket.on("user-joined", d => addMessage(d.username+" joined", "system"));
-    socket.on("user-left", d => addMessage(d.username+" left", "system"));
+    
 
     socket.on("user update", users=>{
       membersList.innerHTML="";
