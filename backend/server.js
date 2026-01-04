@@ -22,8 +22,7 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 10000;
 let users = {}; // { socketId: username }
 
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+
 
   // Set username
   socket.on("set-username", (username) => {
@@ -80,4 +79,5 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
