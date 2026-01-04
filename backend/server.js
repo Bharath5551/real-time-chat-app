@@ -17,7 +17,6 @@ const io = new Server(server, {
     origin: "https://chat-real-project.vercel.app", // Your frontend URL
     methods: ["GET", "POST"]
   }
-});
 
 const PORT = process.env.PORT || 10000;
 let users = {}; // { socketId: username }
@@ -79,5 +78,6 @@ let users = {}; // { socketId: username }
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
 
