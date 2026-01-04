@@ -31,7 +31,7 @@ io.on("connection", (socket) => {
     users[socket.id] = username;
     console.log(`${username} joined (id=${socket.id})`);
 
-    io.emit("user-joined", { userId: socket.id, username });
+    
     io.emit("user update", users);
   });
 
@@ -71,7 +71,7 @@ io.on("connection", (socket) => {
     console.log("User disconnected:", socket.id, `(${username || "no-username"})`);
 
     if (username) {
-      io.emit("user-left", { userId: socket.id, username });
+      
       delete users[socket.id];
       io.emit("user update", users);
     }
@@ -81,3 +81,4 @@ io.on("connection", (socket) => {
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
