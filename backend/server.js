@@ -17,21 +17,21 @@ const io = new Server(server, {
     origin: "https://chat-real-project.vercel.app", // Your frontend URL
     methods: ["GET", "POST"]
   }
+});
 
 const PORT = process.env.PORT || 10000;
 let users = {}; // { socketId: username }
+
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
-});
-
 
   // Set username
   socket.on("set-username", (username) => {
     if (!username) username = "Anonymous";
     users[socket.id] = username;
-    
+    console.log(`${username} joined (id=${socket.id})`);
 
-    
+    io.emit("user-joined", { userId: socket.id, username });
     io.emit("user update", users);
   });
 
@@ -68,19 +68,16 @@ io.on("connection", (socket) => {
   // Handle disconnect
   socket.on("disconnect", () => {
     const username = users[socket.id];
-    
+    console.log("User disconnected:", socket.id, `(${username || "no-username"})`);
 
     if (username) {
       io.emit("user-left", { userId: socket.id, username });
       delete users[socket.id];
-          }
+      io.emit("user update", users);
+    }
   });
 });
 
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
-
-
-
