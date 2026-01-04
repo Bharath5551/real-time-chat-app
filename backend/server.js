@@ -20,7 +20,9 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 10000;
 let users = {}; // { socketId: username }
-
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+});
 
 
   // Set username
@@ -78,6 +80,7 @@ let users = {}; // { socketId: username }
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
 
 
