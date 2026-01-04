@@ -1,130 +1,165 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Real-Time Chat App</title>
+/* ===== LIGHT MODE ===== */
+:root{
+  --primary-bg:#f4f6fb;
+  --secondary-bg:#ffffff;
+  --sidebar-bg:#e9ecf5;
+  --accent-color:#4f46e5;
+  --text-color:#1f2937;
+  --input-bg:#ffffff;
+  --user-message-bg:#4f46e5;
+  --other-message-bg:#e5e7eb;
+  --system-message-color:#6b7280;
+}
 
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
+body.dark{
+  --primary-bg:#0f172a;
+  --secondary-bg:#020617;
+  --sidebar-bg:#020617;
+  --accent-color:#6366f1;
+  --text-color:#e5e7eb;
+  --input-bg:#020617;
+  --user-message-bg:#6366f1;
+  --other-message-bg:#1e293b;
+  --system-message-color:#94a3b8;
+}
 
-<body>
+*{box-sizing:border-box}
 
-  <div class="sidebar">
-    <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
-    <h3>Members Online</h3>
-    <div id="membersList"></div>
-  </div>
+body{
+  font-family:"Poppins",sans-serif;
+  margin:0;
+  display:flex;
+  height:100vh;
+  background:var(--primary-bg);
+  color:var(--text-color);
+  overflow:hidden;
+  transition:0.3s;
+}
 
-  <div class="chat">
-    <div id="chat-box"></div>
+/* SIDEBAR */
+.sidebar{
+  width:250px;
+  background:var(--sidebar-bg);
+  padding:20px;
+  border-right:2px solid var(--accent-color);
+  display:flex;
+  flex-direction:column;
+}
 
-    <div class="input-area">
-      <input id="message" placeholder="Type your message..." />
-      <button id="sendBtn">Send</button>
-    </div>
-  </div>
+.theme-toggle{
+  margin-bottom:16px;
+  padding:10px 14px;
+  border-radius:10px;
+  border:none;
+  background:var(--accent-color);
+  color:white;
+  cursor:pointer;
+  font-weight:600;
+}
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+.sidebar h3{
+  margin:0 0 12px;
+  font-size:13px;
+  letter-spacing:1.2px;
+}
 
-  <script>
-    const NODE_SERVER = "https://chat-real-kr4m.onrender.com";
-    const socket = io(NODE_SERVER, { transports:["websocket"] });
+#membersList{overflow:auto}
+#membersList div{
+  padding:8px 6px;
+  border-radius:6px;
+}
 
-    const chatBox = document.getElementById("chat-box");
-    const membersList = document.getElementById("membersList");
-    const messageInput = document.getElementById("message");
-    const sendBtn = document.getElementById("sendBtn");
-    const themeToggle = document.getElementById("themeToggle");
+/* CHAT */
+.chat{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:var(--secondary-bg);
+}
 
-    let username = (prompt("Enter your username:") || "Guest").slice(0,64);
-    socket.emit("set-username", username);
+#chat-box{
+  flex:1;
+  padding:20px 24px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
 
-    function avatarChar(name){
-      return name.charAt(0).toUpperCase();
-    }
+/* INPUT */
+.input-area{
+  display:flex;
+  padding:14px;
+  gap:12px;
+  background:var(--sidebar-bg);
+}
 
-    function scrollBottom(){
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+#message{
+  flex:1;
+  padding:12px 16px;
+  border-radius:999px;
+  border:none;
+  background:var(--input-bg);
+  color:var(--text-color);
+}
 
-    function addMessage(data, type="chat"){
-      if(type === "system"){
-        const s = document.createElement("div");
-        s.className = "system";
-        s.textContent = data;
-        chatBox.appendChild(s);
-        scrollBottom();
-        return;
-      }
+#sendBtn{
+  background:var(--accent-color);
+  border:none;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:999px;
+  cursor:pointer;
+}
 
-      const isSelf = data.username === username;
+/* MESSAGE */
+.message-row{
+  display:flex;
+  gap:10px;
+}
 
-      const row = document.createElement("div");
-      row.className = "message-row" + (isSelf ? " user-row" : "");
+.message-row.user-row{
+  flex-direction:row-reverse;
+}
 
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = avatarChar(data.username);
+.avatar{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--accent-color),#9333ea);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+}
 
-      const msg = document.createElement("div");
-      msg.className = "message " + (isSelf ? "user" : "other");
+.message{
+  max-width:70%;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
 
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = data.username;
+.meta{
+  font-size:12px;
+  opacity:.7;
+}
 
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.textContent = data.message;
+.bubble{
+  padding:12px 16px;
+  border-radius:14px;
+  background:var(--other-message-bg);
+}
 
-      msg.appendChild(meta);
-      msg.appendChild(bubble);
+.message.user .bubble{
+  background:var(--user-message-bg);
+  color:white;
+  border-bottom-right-radius:6px;
+}
 
-      row.appendChild(avatar);
-      row.appendChild(msg);
-
-      chatBox.appendChild(row);
-      scrollBottom();
-    }
-
-    function sendMessage(){
-      const txt = messageInput.value.trim();
-      if(!txt) return;
-      socket.emit("chat-message", txt);
-      messageInput.value = "";
-    }
-
-    sendBtn.onclick = sendMessage;
-    messageInput.onkeydown = e => { if(e.key === "Enter") sendMessage(); };
-
-    socket.on("connect", ()=> addMessage("Connected to server", "system"));
-    socket.on("chat-message", d => addMessage(d, "chat"));
-    socket.on("user-joined", d => addMessage(d.username+" joined", "system"));
-    socket.on("user-left", d => addMessage(d.username+" left", "system"));
-
-    socket.on("user update", users=>{
-      membersList.innerHTML="";
-      Object.values(users).forEach(u=>{
-        const d=document.createElement("div");
-        d.textContent=u;
-        membersList.appendChild(d);
-      });
-    });
-
-    /* ===== DARK MODE LOGIC ===== */
-    if(localStorage.getItem("theme")==="dark"){
-      document.body.classList.add("dark");
-      themeToggle.textContent="☀️ Light";
-    }
-
-    themeToggle.onclick=()=>{
-      document.body.classList.toggle("dark");
-      const dark=document.body.classList.contains("dark");
-      localStorage.setItem("theme",dark?"dark":"light");
-      themeToggle.textContent=dark?"☀️ Light":"🌙 Dark";
-    };
-  </script>
-</body>
-</html>
+.system{
+  align-self:center;
+  font-style:italic;
+  color:var(--system-message-color);
+}
