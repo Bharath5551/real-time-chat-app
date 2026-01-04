@@ -131,7 +131,7 @@
     messageInput.onkeydown = e => { if(e.key === "Enter") sendMessage(); };
 
     
-    socket.on("chat-message", d => addMessage(d, "chat"));
+    
     
 
     socket.on("user update", users=>{
