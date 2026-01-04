@@ -1,186 +1,130 @@
-:root{
-  --primary-bg:#1a1a2e;
-  --secondary-bg:#16213e;
-  --sidebar-bg:#0f3460;
-  --accent-color:#e94560;
-  --text-color:#dcdcdc;
-  --input-bg:#1f4068;
-  --user-message-bg:#e94560;
-  --other-message-bg:#223048;
-  --system-message-color:#9aa4b2;
-}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Real-Time Chat App</title>
 
-*{ box-sizing:border-box }
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
 
-body{
-  font-family:"Poppins",sans-serif;
-  margin:0;
-  display:flex;
-  height:100vh;
-  background:var(--primary-bg);
-  color:var(--text-color);
-  overflow:hidden;
-}
+<body>
 
-/* SIDEBAR */
-.sidebar{
-  width:250px;
-  background:var(--sidebar-bg);
-  padding:20px;
-  border-right:2px solid var(--accent-color);
-  display:flex;
-  flex-direction:column;
-}
-.sidebar h3{
-  margin:0 0 12px;
-  font-size:13px;
-  letter-spacing:1.2px;
-}
-#membersList{ overflow:auto }
-#membersList div{
-  padding:8px 6px;
-  border-radius:6px;
-  margin-bottom:6px;
-}
-#membersList div:hover{
-  color:var(--accent-color);
-  cursor:pointer;
-}
+  <div class="sidebar">
+    <button id="themeToggle" class="theme-toggle">🌙 Dark</button>
+    <h3>Members Online</h3>
+    <div id="membersList"></div>
+  </div>
 
-/* CHAT AREA */
-.chat{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  background:var(--secondary-bg);
-}
+  <div class="chat">
+    <div id="chat-box"></div>
 
-#chat-box{
-  flex:1;
-  padding:20px 24px;
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+    <div class="input-area">
+      <input id="message" placeholder="Type your message..." />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
 
-/* INPUT */
-.input-area{
-  display:flex;
-  align-items:center;
-  padding:14px;
-  background:var(--sidebar-bg);
-  gap:12px;
-}
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-#message{
-  flex:1;
-  padding:12px 16px;
-  border-radius:999px;
-  border:none;
-  background:var(--input-bg);
-  color:var(--text-color);
-  font-size:15px;
-}
+  <script>
+    const NODE_SERVER = "https://chat-real-kr4m.onrender.com";
+    const socket = io(NODE_SERVER, { transports:["websocket"] });
 
-#message:focus{
-  outline:none;
-  box-shadow:0 0 0 3px rgba(233,69,96,0.15);
-}
+    const chatBox = document.getElementById("chat-box");
+    const membersList = document.getElementById("membersList");
+    const messageInput = document.getElementById("message");
+    const sendBtn = document.getElementById("sendBtn");
+    const themeToggle = document.getElementById("themeToggle");
 
-#sendBtn{
-  background:var(--accent-color);
-  border:none;
-  color:#fff;
-  padding:10px 18px;
-  border-radius:999px;
-  cursor:pointer;
-  font-weight:600;
-}
+    let username = (prompt("Enter your username:") || "Guest").slice(0,64);
+    socket.emit("set-username", username);
 
-/* MESSAGE ROW + AVATAR */
-.message-row{
-  display:flex;
-  align-items:flex-end;
-  gap:10px;
-}
+    function avatarChar(name){
+      return name.charAt(0).toUpperCase();
+    }
 
-.message-row.user-row{
-  flex-direction:row-reverse;
-}
+    function scrollBottom(){
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-.avatar{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:var(--accent-color);
-  color:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
-  font-size:14px;
-  flex-shrink:0;
-}
+    function addMessage(data, type="chat"){
+      if(type === "system"){
+        const s = document.createElement("div");
+        s.className = "system";
+        s.textContent = data;
+        chatBox.appendChild(s);
+        scrollBottom();
+        return;
+      }
 
-/* MESSAGE */
-.message{
-  display:flex;
-  flex-direction:column;
-  max-width:70%;
-  gap:6px;
-}
+      const isSelf = data.username === username;
 
-.message.user{
-  align-items:flex-end;
-}
+      const row = document.createElement("div");
+      row.className = "message-row" + (isSelf ? " user-row" : "");
 
-.message.other{
-  align-items:flex-start;
-}
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.textContent = avatarChar(data.username);
 
-.meta{
-  font-size:12px;
-  opacity:0.85;
-  display:flex;
-  gap:8px;
-}
+      const msg = document.createElement("div");
+      msg.className = "message " + (isSelf ? "user" : "other");
 
-.bubble{
-  padding:12px 16px;
-  border-radius:14px;
-  background:var(--other-message-bg);
-  box-shadow:0 2px 8px rgba(0,0,0,0.15);
-  word-wrap:break-word;
-  white-space:pre-wrap;
-  font-size:15px;
-}
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      meta.textContent = data.username;
 
-.message.user .bubble{
-  background:var(--user-message-bg);
-  color:#fff;
-  border-bottom-right-radius:6px;
-}
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = data.message;
 
-.message.other .bubble{
-  border-bottom-left-radius:6px;
-}
+      msg.appendChild(meta);
+      msg.appendChild(bubble);
 
-/* CODE BLOCK */
-.bubble pre{
-  margin:0;
-  padding:12px;
-  border-radius:8px;
-  background:rgba(0,0,0,0.2);
-  overflow:auto;
-  font-family:"Source Code Pro",monospace;
-  font-size:13px;
-}
+      row.appendChild(avatar);
+      row.appendChild(msg);
 
-/* SYSTEM MESSAGE */
-.system{
-  align-self:center;
-  color:var(--system-message-color);
-  font-style:italic;
-  padding:6px 12px;
-}
+      chatBox.appendChild(row);
+      scrollBottom();
+    }
+
+    function sendMessage(){
+      const txt = messageInput.value.trim();
+      if(!txt) return;
+      socket.emit("chat-message", txt);
+      messageInput.value = "";
+    }
+
+    sendBtn.onclick = sendMessage;
+    messageInput.onkeydown = e => { if(e.key === "Enter") sendMessage(); };
+
+    socket.on("connect", ()=> addMessage("Connected to server", "system"));
+    socket.on("chat-message", d => addMessage(d, "chat"));
+    socket.on("user-joined", d => addMessage(d.username+" joined", "system"));
+    socket.on("user-left", d => addMessage(d.username+" left", "system"));
+
+    socket.on("user update", users=>{
+      membersList.innerHTML="";
+      Object.values(users).forEach(u=>{
+        const d=document.createElement("div");
+        d.textContent=u;
+        membersList.appendChild(d);
+      });
+    });
+
+    /* ===== DARK MODE LOGIC ===== */
+    if(localStorage.getItem("theme")==="dark"){
+      document.body.classList.add("dark");
+      themeToggle.textContent="☀️ Light";
+    }
+
+    themeToggle.onclick=()=>{
+      document.body.classList.toggle("dark");
+      const dark=document.body.classList.contains("dark");
+      localStorage.setItem("theme",dark?"dark":"light");
+      themeToggle.textContent=dark?"☀️ Light":"🌙 Dark";
+    };
+  </script>
+</body>
+</html>
