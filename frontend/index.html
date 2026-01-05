@@ -49,46 +49,15 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function addMessage(data, type="chat") {
-
-  // 🔕 SILENTLY IGNORE system join/leave messages
-  if (
-    data?.username === "System" ||
-    /joined|left|connected|disconnected/i.test(data?.message || "")
-  ) {
-    return;
-  }
-
-  const isSelf = data.username === username;
-
-  const row = document.createElement("div");
-  row.className = "message-row" + (isSelf ? " user-row" : "");
-
-  const avatar = document.createElement("div");
-  avatar.className = "avatar";
-  avatar.textContent = data.username.charAt(0).toUpperCase();
-
-  const msg = document.createElement("div");
-  msg.className = "message " + (isSelf ? "user" : "other");
-
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.textContent = data.username;
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.textContent = data.message;
-
-  msg.appendChild(meta);
-  msg.appendChild(bubble);
-
-  row.appendChild(avatar);
-  row.appendChild(msg);
-
-  chatBox.appendChild(row);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
+    function addMessage(data, type="chat"){
+      if(type === "system"){
+        const s = document.createElement("div");
+        s.className = "system";
+        s.textContent = data;
+        chatBox.appendChild(s);
+        scrollBottom();
+        return;
+      }
 
       const isSelf = data.username === username;
 
@@ -131,7 +100,7 @@
     messageInput.onkeydown = e => { if(e.key === "Enter") sendMessage(); };
 
     
-    
+    socket.on("chat-message", d => addMessage(d, "chat"));
     
 
     socket.on("user update", users=>{
