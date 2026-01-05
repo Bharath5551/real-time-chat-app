@@ -1,8 +1,4 @@
-/* =========================
-   THEME VARIABLES
-   ========================= */
-
-/* LIGHT MODE (default) */
+/* ===== LIGHT MODE ===== */
 :root{
   --primary-bg:#f4f6fb;
   --secondary-bg:#ffffff;
@@ -15,7 +11,6 @@
   --system-message-color:#6b7280;
 }
 
-/* DARK MODE */
 body.dark{
   --primary-bg:#0f172a;
   --secondary-bg:#020617;
@@ -28,13 +23,7 @@ body.dark{
   --system-message-color:#94a3b8;
 }
 
-/* =========================
-   GLOBAL
-   ========================= */
-
-*{
-  box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
   font-family:"Poppins",sans-serif;
@@ -44,61 +33,43 @@ body{
   background:var(--primary-bg);
   color:var(--text-color);
   overflow:hidden;
-  transition:background .25s,color .25s;
+  transition:0.3s;
 }
 
-/* =========================
-   SIDEBAR
-   ========================= */
-
+/* SIDEBAR */
 .sidebar{
   width:250px;
   background:var(--sidebar-bg);
-  padding:16px;
+  padding:20px;
   border-right:2px solid var(--accent-color);
   display:flex;
   flex-direction:column;
-  gap:12px;
 }
 
-/* SMALL THEME TOGGLE */
 .theme-toggle{
-  width:34px;
-  height:34px;
-  border-radius:50%;
+  margin-bottom:16px;
+  padding:10px 14px;
+  border-radius:10px;
   border:none;
   background:var(--accent-color);
-  color:#fff;
+  color:white;
   cursor:pointer;
-  font-size:16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  font-weight:600;
 }
 
 .sidebar h3{
-  margin:0;
-  font-size:12px;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-}
-
-#membersList{
-  overflow:auto;
-}
-
-#membersList div{
-  padding:8px 10px;
-  border-radius:20px;
-  background:rgba(0,0,0,0.05);
+  margin:0 0 12px;
   font-size:13px;
-  white-space:nowrap;
+  letter-spacing:1.2px;
 }
 
-/* =========================
-   CHAT AREA
-   ========================= */
+#membersList{overflow:auto}
+#membersList div{
+  padding:8px 6px;
+  border-radius:6px;
+}
 
+/* CHAT */
 .chat{
   flex:1;
   display:flex;
@@ -108,21 +79,18 @@ body{
 
 #chat-box{
   flex:1;
-  padding:20px;
+  padding:20px 24px;
   overflow-y:auto;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
 
-/* =========================
-   INPUT AREA
-   ========================= */
-
+/* INPUT */
 .input-area{
   display:flex;
-  gap:10px;
-  padding:12px;
+  padding:14px;
+  gap:12px;
   background:var(--sidebar-bg);
 }
 
@@ -133,30 +101,20 @@ body{
   border:none;
   background:var(--input-bg);
   color:var(--text-color);
-  font-size:14px;
-}
-
-#message:focus{
-  outline:none;
 }
 
 #sendBtn{
-  padding:10px 16px;
-  border:none;
-  border-radius:999px;
   background:var(--accent-color);
-  color:white;
+  border:none;
+  color:#fff;
+  padding:10px 18px;
+  border-radius:999px;
   cursor:pointer;
-  font-weight:600;
 }
 
-/* =========================
-   MESSAGES + AVATAR
-   ========================= */
-
+/* MESSAGE */
 .message-row{
   display:flex;
-  align-items:flex-end;
   gap:10px;
 }
 
@@ -165,8 +123,8 @@ body{
 }
 
 .avatar{
-  width:34px;
-  height:34px;
+  width:36px;
+  height:36px;
   border-radius:50%;
   background:linear-gradient(135deg,var(--accent-color),#9333ea);
   color:white;
@@ -174,28 +132,24 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:600;
-  font-size:14px;
-  flex-shrink:0;
 }
 
 .message{
-  max-width:75%;
+  max-width:70%;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:6px;
 }
 
 .meta{
-  font-size:11px;
+  font-size:12px;
   opacity:.7;
 }
 
 .bubble{
-  padding:10px 14px;
+  padding:12px 16px;
   border-radius:14px;
   background:var(--other-message-bg);
-  font-size:14px;
-  word-wrap:break-word;
 }
 
 .message.user .bubble{
@@ -204,43 +158,8 @@ body{
   border-bottom-right-radius:6px;
 }
 
-/* =========================
-   SYSTEM MESSAGE (if used)
-   ========================= */
-
 .system{
   align-self:center;
   font-style:italic;
-  font-size:13px;
   color:var(--system-message-color);
-}
-
-/* =========================
-   MOBILE RESPONSIVE
-   ========================= */
-
-@media(max-width:768px){
-
-  body{
-    flex-direction:column;
-  }
-
-  .sidebar{
-    width:100%;
-    flex-direction:row;
-    align-items:center;
-    gap:10px;
-    border-right:none;
-    border-bottom:2px solid var(--accent-color);
-    overflow-x:auto;
-  }
-
-  #membersList{
-    display:flex;
-    gap:8px;
-  }
-
-  .message{
-    max-width:85%;
-  }
 }
